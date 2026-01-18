@@ -1,4 +1,6 @@
-def call() {
+def call(Map repoConfig = [:]) {
+
+    def CONFIG
 
     pipeline {
         agent any
@@ -14,15 +16,9 @@ def call() {
                 }
             }
 
-            stage('Clone Repository') {
-                steps {
-                    git url: CONFIG.REPO_URL, branch: CONFIG.BRANCH
-                }
-            }
-
             stage('User Approval') {
                 when {
-                    expression { CONFIG.KEEP_APPROVAL_STAGE }
+                    expression { CONFIG.KEEP_APPROVAL_STAGE == true }
                 }
                 steps {
                     input message: "Approve Kafka deployment to ${CONFIG.ENVIRONMENT}?"
@@ -32,9 +28,9 @@ def call() {
             stage('Kafka Ansible Execution') {
                 steps {
                     sh """
-                      ansible-playbook \
-                      ${CONFIG.CODE_BASE_PATH}/kafka-playbook.yml \
-                      -i ${CONFIG.CODE_BASE_PATH}/inventory
+                    ansible-playbook \
+                    ${CONFIG.CODE_BASE_PATH}/kafka-playbook.yml \
+                    -i ${CONFIG.CODE_BASE_PATH}/inventory
                     """
                 }
             }

@@ -9,23 +9,23 @@ def call() {
                 steps {
                     script {
                         def yamlText = libraryResource('kafka-config.yaml')
-                        env.CONFIG = readYaml(text: yamlText)
+                        CONFIG = readYaml(text: yamlText)
                     }
                 }
             }
 
             stage('Clone Repository') {
                 steps {
-                    git url: env.CONFIG.REPO_URL, branch: env.CONFIG.BRANCH
+                    git url: CONFIG.REPO_URL, branch: CONFIG.BRANCH
                 }
             }
 
             stage('User Approval') {
                 when {
-                    expression { env.CONFIG.KEEP_APPROVAL_STAGE }
+                    expression { CONFIG.KEEP_APPROVAL_STAGE }
                 }
                 steps {
-                    input message: "Approve Kafka deployment to ${env.CONFIG.ENVIRONMENT}?"
+                    input message: "Approve Kafka deployment to ${CONFIG.ENVIRONMENT}?"
                 }
             }
 
@@ -33,8 +33,8 @@ def call() {
                 steps {
                     sh """
                       ansible-playbook \
-                      ${env.CONFIG.CODE_BASE_PATH}/kafka-playbook.yml \
-                      -i ${env.CONFIG.CODE_BASE_PATH}/inventory
+                      ${CONFIG.CODE_BASE_PATH}/kafka-playbook.yml \
+                      -i ${CONFIG.CODE_BASE_PATH}/inventory
                     """
                 }
             }
@@ -42,8 +42,8 @@ def call() {
             stage('Notification') {
                 steps {
                     slackSend(
-                        channel: env.CONFIG.SLACK_CHANNEL_NAME,
-                        message: env.CONFIG.ACTION_MESSAGE
+                        channel: CONFIG.SLACK_CHANNEL_NAME,
+                        message: CONFIG.ACTION_MESSAGE
                     )
                 }
             }
